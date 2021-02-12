@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
@@ -16,7 +17,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import io.realm.Realm
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -134,6 +137,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 locationCallback,
                 null
             )
+            putsMarkers()
+        }
+    }
+
+    private fun putsMarkers() {
+        mMap.clear()
+        val realmResults = realm.where(Memo::class.java)
+            .findAll()
+        for (memo: Memo in realmResults) {
+            val latLng = LatLng(memo.lat, memo.lng)
+            val marker = MarkerOptions()
+                .position(latLng)
+                .title(DateFormat.format("yyyy/MM/dd kk:mm", memo.dateTime).toString())
+                .snippet(memo.memo)
+                .draggable(false)
+
+            val descriptor =
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+            marker.icon(descriptor)
+
+            mMap.addMarker(marker)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (::mMap.isInitialized) {
+            putsMarkers()
         }
     }
 
